@@ -1,4 +1,5 @@
 // GRR 20190471 Artur Temporal Coelho
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -37,9 +38,11 @@ unsigned char **carregar_dicionario(int *tam){
     	fgets((char *)str, 99, dic);
     	str[strlen((char *)str)-1] = 0;
     	dicionario[i] = malloc((strlen((char *)str)+1)*sizeof(unsigned char));
-		
-		// ++++++++++++++++++++++++++++ PASSA A PALAVRA PARA LETRA MINUSCULA
 
+		// passa a palavra para letra minúscula
+		for (int i = 0; str[i]; i++)
+			str[i] = tolower(str[i]);
+		
     	strcpy((char *)dicionario[i], (char *)str);
     	i++;
 
