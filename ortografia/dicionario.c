@@ -1,3 +1,4 @@
+// GRR 20190471 Artur Temporal Coelho
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -27,21 +28,28 @@ char **carregar_dicionario(int *tam){
 
     int max = 10000;
     int i = 0;
+
     // enquanto nao chega ao final do arquivo
     while(!feof(dic)){
     	// le uma linha do dicionario, aloca o espaco dela na estrutura do dicionario
     	fgets(str, 99, dic);
     	str[strlen(str)-1] = 0;
     	dicionario[i] = malloc((strlen(str)+1)*sizeof(char));
+
+		// ++++++++++++++++++++++++++++ PASSA A PALAVRA PARA LETRA MINUSCULA
+
     	strcpy(dicionario[i], str);
     	i++;
-    	// caso necessario, aloca mais espaco na 
+
+    	// caso necessario, aloca mais espaco na memória
     	if (i >= max)
     		max += 10000;
     		dicionario = realloc(dicionario, max*sizeof(char*));
     }
+
     *tam = i;
     fclose(dic);
+	// retorna o dicionario ordenado
     return dicionario;
 }
 
@@ -62,6 +70,7 @@ int palavra_valida(char *palavra, char **dicionario, int tam){
 			return 1;
 		return 0;
 	}
+
 	int inicio = 0;
 	int fim = tam;
 	int meio = (inicio + fim) / 2;
@@ -78,15 +87,11 @@ int palavra_valida(char *palavra, char **dicionario, int tam){
 		}
 		meio = (inicio + fim)/2;
 	}
-	// implementacao em busca sequencial
-	// int i = 0;
-	// while (i < tam && strcasecmp(dicionario[i], palavra)){
-	// 	i++;
-	// }
-	// return i != tam;
+
     return 0;    
 }
 
+// libera o espaço de memoria alocado dinamicamente
 void finaliza_programa(char **dicionario, int tam){
 	for (int i = 0; i < tam; ++i)
 	{
