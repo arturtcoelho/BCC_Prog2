@@ -7,6 +7,15 @@
 #include <locale.h>
 #include "dicionario.h"
 
+// para utilizar o q sort é necessario fazer o casting dos 
+// tipos (unsigned char *) para (void *)  
+int string_cmp(const void *a, const void *b) 
+{ 
+    const char **ia = (const char **)a;
+    const char **ib = (const char **)b;
+    return strcmp(*ia, *ib);
+} 
+
 // carrega o dicionario, de seu arquivo original para a 
 // estrutura alocada dinamicamente em memoria
 // retorna o ponteiro para a estrutura e o tamanho total dela
@@ -17,9 +26,9 @@ unsigned char **carregar_dicionario(int *tam){
     unsigned char **dicionario;
     
     // abre o dicionario e sai do programa caso o mesmo nao exista
-    dic = fopen("/usr/share/dict/brazilian", "r");
+    dic = fopen("./brazilian", "r");
     if (dic == NULL){
-    	dic = fopen("./brazilian", "r");
+    	dic = fopen("/usr/share/dict/brazilian", "r");
     	if (dic == NULL){
 	    	printf("O dicionario nao foi encontrado\n");
 	    	exit(1);
@@ -43,6 +52,7 @@ unsigned char **carregar_dicionario(int *tam){
 		for (int i = 0; str[i]; i++)
 			str[i] = tolower(str[i]);
 		
+		// copia a palavra para o array
     	strcpy((char *)dicionario[i], (char *)str);
     	i++;
 
@@ -53,8 +63,10 @@ unsigned char **carregar_dicionario(int *tam){
 		}
     }
 
+	qsort(dicionario, i, sizeof(unsigned char *), string_cmp);
     *tam = i;
     fclose(dic);
+
 	// retorna o dicionario ordenado
     return dicionario;
 }
@@ -63,18 +75,23 @@ unsigned char **carregar_dicionario(int *tam){
 // retorna 0 caso contrario
 // implementado em busca binaria
 int palavra_valida(unsigned char *palavra, unsigned char **dicionario, int tam){
-	// confere se eh apenas uma letra
-	if ((strlen((char *)palavra) <= 1)){
-		if (isalpha(palavra[0]))
-			return 1;
-		return 0;
-	}
 
+	// esse confere se uma palavra consiste de apenas um caractere, 
+	// caso essa palavra seja um caractere alfabetico é considerado válido
+	// e portanto não é marcado entre colchetes
+
+	// if ((strlen((char *)palavra) <= 1)){
+	// 	if (isalpha(palavra[0]))
+	// 		return 1;
+	// 	return 0;
+	// }
+
+	// busca binaria
 	int inicio = 0;
 	int fim = tam;
 	int meio = (inicio + fim) / 2;
-	// busca binaria
 	while(inicio <= fim){
+		// achou a palavra
 		if(!strcasecmp((char *)dicionario[meio], (char *)palavra)){
 			return 1;
 		}
@@ -87,6 +104,7 @@ int palavra_valida(unsigned char *palavra, unsigned char **dicionario, int tam){
 		meio = (inicio + fim)/2;
 	}
 
+	// palavra não encontrada
     return 0;    
 }
 
