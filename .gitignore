@@ -4,4 +4,10 @@ a.out
 
 ortografia/ortografia
 ortografia/out.txt
+
 binaryfiles/long_integers
+binaryfiles/generator
+binaryfiles/sort
+binaryfiles/head
+binaryfiles/tail
+binaryfiles/reader

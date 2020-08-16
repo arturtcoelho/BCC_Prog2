@@ -18,9 +18,7 @@ int main()
 
 // gera os numeros em memoria
     for (int i = 0; i < SIZE; i++)
-    {
-        long_int_a[i] = random();
-    }
+        long_int_a[i] = random() * (random() & 1 ? -1 : 1);
     
 // escreve no arquivo em disco
     fwrite(long_int_a, sizeof(long int), SIZE, long_int_f);
