@@ -3,6 +3,10 @@
 
 #define ERR_ARQ_NAO_ENCONTRADO 1
 #define ERR_BAD_MALLOC 2
+#define ERR_ARG_NAO_ENCONTRADO 3
+#define ERR_LEITURA_DADOS 4
+#define ERR_CRIACAO_ARQ 5
+#define ERR_ESCRITA_ARQ 6
 
 #include <inttypes.h>
 
@@ -24,5 +28,12 @@ typedef struct wav_header {
     char sub_chunk2_id[4];
     uint32_t sub_chunk2_size;
 } wav_header_t;
+
+typedef struct file_data {
+    float level;
+    float time;
+    char* input_file;
+    char* output_file;
+} file_data_t;
 
 #endif
