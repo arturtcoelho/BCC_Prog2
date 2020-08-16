@@ -17,7 +17,6 @@ int main(int argc, char *argv[])
             case 'f':
                 printf("opção -f\n");
                 file = fopen(optarg, "r");
-                // printf("%d\n", file == NULL);
                 return file == NULL;
             default:
                 break;
@@ -25,7 +24,6 @@ int main(int argc, char *argv[])
     }
     scanf("%s", file_path);
     file = fopen(file_path, "r");
-    // printf("%d\n", file == NULL);
 
     return file == NULL;
 }

@@ -1,6 +1,9 @@
 #ifndef __HEADER__
 #define __HEADER__
 
+#define ERR_ARQ_NAO_ENCONTRADO 1
+#define ERR_BAD_MALLOC 2
+
 #include <inttypes.h>
 
 typedef struct wav_header {

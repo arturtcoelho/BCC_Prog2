@@ -2,22 +2,17 @@
 #include <stdlib.h>
 
 #include "header.h"
+#include "file_handle.h"
 
-int main(int argc, char const *argv[])
+int main(int argc, char  **argv)
 {
-    wav_header_t *wav_header = (wav_header_t*)malloc(sizeof(wav_header_t));
+    FILE* input_file = NULL;
+    FILE* output_file = NULL;
 
-    FILE* wav_file = NULL;
+    get_files(argc, argv, &input_file, &output_file);
+    wav_header_t *wav_header = read_header(input_file);
 
-    if (argc > 1)
-        wav_file = fopen(argv[1], "r");
-    if (wav_file == NULL){
-        printf("Arquivo: %s não encontrado\n", argv[1]);
-        exit(69);
-    }
-
-    fread(wav_header, sizeof(wav_header_t), 1, wav_file);
-    
+    printf("Cabeçalho do arquivo: \n");
     printf("%17s : %.4s\n", "riff tag", wav_header->chunk_id);
     printf("%17s : %d\n", "riff size", wav_header->chunk_size);
     printf("%17s : %.4s\n", "wave tag", wav_header->format);
