@@ -8,6 +8,11 @@
 #define ERR_CRIACAO_ARQ 5
 #define ERR_ESCRITA_ARQ 6
 
+#define MAX_16 32767.0
+
+#define DEF_NORM 0.95
+#define DEF_VOL 1
+
 #include <inttypes.h>
 
 typedef struct wav_header {
@@ -29,11 +34,11 @@ typedef struct wav_header {
     uint32_t sub_chunk2_size;
 } wav_header_t;
 
-typedef struct file_data {
+typedef struct arg_data {
     float level;
     float time;
-    char* input_file;
-    char* output_file;
-} file_data_t;
+    void* input_file;
+    void* output_file;
+} arg_data_t;
 
 #endif

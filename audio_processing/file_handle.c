@@ -6,76 +6,84 @@
 #include "header.h"
 #include "file_handle.h"
 
-file_data_t* get_arg_data(int argc, char **argv){
+arg_data_t* get_arg_data(int argc, char **argv){
 
-    file_data_t *file_data = malloc(sizeof(file_data_t));
+    // aloca espaço para as informações de argumento
+    arg_data_t *arg_data = malloc(sizeof(arg_data_t));
     
     int opt;
 
+    // utiliza a função do unistd, getopt para processar as informações dos argumentos
     opterr = 0;
     while ((opt = getopt(argc, argv, "i:o:l:t:")) != -1){
         switch (opt) {
             case 'i':
-                file_data->input_file = malloc(strlen(optarg));
-                strcpy(file_data->input_file, optarg);
-                if (file_data->input_file == NULL){
-                    printf("opção -i, arquivo %s não encontrado\n", optarg);
+                arg_data->input_file = malloc(strlen(optarg));
+                strcpy(arg_data->input_file, optarg);
+                if (arg_data->input_file == NULL){
+                    fprintf(stderr, "opção -i, arquivo %s não encontrado\n", optarg);
                     exit(ERR_ARQ_NAO_ENCONTRADO);
                 }
                 break;
             case 'o':
-                file_data->output_file = malloc(strlen(optarg));
-                strcpy(file_data->output_file, optarg);
-                if (file_data->output_file == NULL){
-                    printf("opção -o, arquivo %s não encontrado\n", optarg);
+                arg_data->output_file = malloc(strlen(optarg));
+                strcpy(arg_data->output_file, optarg);
+                if (arg_data->output_file == NULL){
+                    fprintf(stderr, "opção -o, arquivo %s não encontrado\n", optarg);
                     exit(ERR_ARQ_NAO_ENCONTRADO);
                 }
                 break;
             case 'l':
                 if (optarg == NULL){
-                    printf("opção -l, argumento inválido\n");
+                    fprintf(stderr, "opção -l, argumento inválido\n");
                     exit(ERR_ARG_NAO_ENCONTRADO);
                 }
-                file_data->level = (float)atof(optarg);
+                arg_data->level = (float)atof(optarg);
                 break;
             case 't':
                 if (optarg == NULL){
-                    printf("opção -t, argumento inválido\n");
+                    fprintf(stderr, "opção -t, argumento inválido\n");
                     exit(ERR_ARG_NAO_ENCONTRADO);
                 }
-                file_data->time = (float)atof(optarg);
+                arg_data->time = (float)atof(optarg);
                 break;
             default:
                 break;
         }
     }
 
-    if (file_data->input_file == NULL){
-        printf("Utilizando stdin como entrada\n");
-        file_data->input_file = stdin;
+    // caso os arquivos de input e output nao sejam selecionados, é utilizado stdin ou stdout
+    if (arg_data->input_file == NULL){
+        arg_data->input_file = stdin;
     }
 
-    if (file_data->output_file == NULL){
-        printf("Utilizando stdout como saida\n");
-        file_data->output_file = stdout;
+    if (arg_data->output_file == NULL){
+        arg_data->output_file = stdout;
     }
 
-    return file_data;
+    return arg_data;
 }
 
-wav_header_t* read_header(char *input_file_name){
-    FILE* input_file = fopen(input_file_name, "r");
+wav_header_t* read_header(void* input_file_name){
+
+// abre o arquivo
+    FILE* input_file = NULL;
+
+    if (input_file_name == stdin){
+        input_file = input_file_name;
+    } else {
+        input_file = fopen(input_file_name, "r");
+        if (input_file == NULL){
+            fprintf(stderr, "arquivo de input invalido: %p\n", input_file);
+            exit(ERR_ARQ_NAO_ENCONTRADO);
+        }
+    }
  
 //  aloca memoria para o header
     wav_header_t* wav_header = (wav_header_t*)malloc(sizeof(wav_header_t));
     if (wav_header == NULL){
         printf("Bad malloc\n");
         exit(ERR_BAD_MALLOC);
-    }
-
-    if (input_file == NULL){
-        printf("arquivo de input invalido: %p\n", input_file);
-        exit(ERR_ARQ_NAO_ENCONTRADO);
     }
 
 // le o cabeçalho
@@ -86,49 +94,72 @@ wav_header_t* read_header(char *input_file_name){
     return wav_header;
 }
 
-int16_t* get_wav_data(wav_header_t *wav_header, file_data_t *file_data){
-    FILE* input_file = fopen(file_data->input_file, "r");
+int get_wav_data(int16_t **data, wav_header_t **wav_header, arg_data_t *arg_data){
 
-    int16_t *data = malloc(wav_header->sub_chunk2_size);
-    if (data == NULL){
-        printf("Bad malloc\n");
+// abre o aquivo para leitura
+    FILE* input_file = NULL;
+
+    if (arg_data->input_file == stdin){
+        input_file = arg_data->input_file;
+    } else {
+        input_file = fopen(arg_data->input_file, "r");
+        if (input_file == NULL){
+            fprintf(stderr, "arquivo de input invalido: %p\n", input_file);
+            exit(ERR_ARQ_NAO_ENCONTRADO);
+        }
+    }
+
+// aloca memorias
+    *wav_header = (wav_header_t*)malloc(sizeof(wav_header_t));
+    if (*wav_header == NULL){
+        fprintf(stderr, "Bad malloc\n");
         exit(ERR_BAD_MALLOC);
     }
 
-    fseek(input_file, sizeof(wav_header_t), SEEK_SET);
+// le o cabeçalho
+    fread(*wav_header, sizeof(wav_header_t), 1, input_file);
 
-    int size;
-    size = fread(data, sizeof(int16_t), wav_header->sub_chunk2_size / sizeof(int16_t), input_file);
+    *data = malloc((*wav_header)->sub_chunk2_size);
+
+    if (*data == NULL){
+        fprintf(stderr, "Bad malloc\n");
+        exit(ERR_BAD_MALLOC);
+    }
+
+// le os dados
+    int size = fread(*data, sizeof(int16_t), (*wav_header)->sub_chunk2_size / sizeof(int16_t), input_file);
     
+// processamento de erro de leitura
     if (!size){
-        printf("erro de leitura\n");
+        fprintf(stderr, "erro de leitura\n");
         exit(ERR_LEITURA_DADOS);
     }
 
-    if (size != wav_header->sub_chunk2_size / sizeof(int16_t)){
-        printf("erro de leitura\nresultados inesperados podem ocorrer\n");
+    if (size != (*wav_header)->sub_chunk2_size / sizeof(int16_t)){
+        fprintf(stderr, "erro de leitura - resultados inesperados podem ocorrer\n");
     }
 
-    fclose(input_file);
+    if (input_file != stdin)
+        fclose(input_file);
 
-    return data;
+    return 1;
 }
 
-int store_wav_data(wav_header_t *wav_header, file_data_t *file_data, int16_t *data){
+int store_wav_data(wav_header_t *wav_header, arg_data_t *arg_data, int16_t *data){
 
-    FILE* output_file = fopen(file_data->output_file, "w+");
+    FILE* output_file = fopen(arg_data->output_file, "w+");
 
     if (output_file == NULL){
-        printf("erro de criação de arquivo\n");
+        fprintf(stderr, "erro de criação de arquivo\n");
         exit(ERR_CRIACAO_ARQ);
     }
 
     if (!fwrite(wav_header, sizeof(wav_header_t), 1, output_file)){
-        printf("erro de escrita de arquivo\n");
+        fprintf(stderr, "erro de escrita de arquivo\n");
         exit(ERR_ESCRITA_ARQ);
     }
     if (!fwrite(data, sizeof(int16_t), wav_header->sub_chunk2_size / sizeof(int16_t), output_file)) {
-        printf("erro de escrita de arquivo\n");
+        fprintf(stderr, "erro de escrita de arquivo\n");
         exit(ERR_ESCRITA_ARQ);
     }
 

@@ -6,18 +6,28 @@
 
 int main(int argc, char  **argv)
 {
-    file_data_t *file_data = get_arg_data(argc, argv);
-    wav_header_t *wav_header = read_header(file_data->input_file);
-
-    int16_t *data = get_wav_data(wav_header, file_data);
-
-    int size = wav_header->sub_chunk2_size / sizeof(int16_t);
-    for (int i = 0; i < size; i++) {
-        data[i] = data[i] * file_data->level;
+    // le os argumentos passados pelo terminal
+    arg_data_t *arg_data = get_arg_data(argc, argv);
+    
+    // le o arquivo passado por argumento
+    wav_header_t *wav_header = NULL;
+    int16_t *data = NULL;
+    get_wav_data(&data, &wav_header, arg_data);
+    
+    // cuida do valor do argumento
+    if (arg_data->level >= 0 || arg_data->level < 10) {
+        arg_data->level = DEF_VOL;
+        fprintf(stderr, "wavvol: level invalido ajustado para vol padrão\n");
     }
 
-    store_wav_data(wav_header, file_data, data);
-    printf("fim: volume modificado em %f\n", file_data->level);
+    // para cada elemento, multiplica sua amplitude pelo valor estabelecido
+    int size = wav_header->sub_chunk2_size / sizeof(int16_t);
+    for (int i = 0; i < size; i++) {
+        data[i] = data[i] * arg_data->level;
+    }
+
+    // armazena o vetor no aqruivo
+    store_wav_data(wav_header, arg_data, data);
 
     return 0;
 }

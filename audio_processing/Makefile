@@ -6,3 +6,6 @@ wavvol: wavvol.c file_handle.h file_handle.c header.h
 
 wavrev: wavrev.c file_handle.h file_handle.c header.h
 	gcc -o wavrev wavrev.c file_handle.c -Wall
+
+wavnorm: wavnorm.c file_handle.h file_handle.c header.h 
+	gcc -o wavnorm wavnorm.c file_handle.c -Wall -lm

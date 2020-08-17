@@ -3,4 +3,6 @@ mp3_samples
 
 wavinfo
 wavvol
+wavnorm
+wavrev
 out

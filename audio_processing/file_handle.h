@@ -5,9 +5,9 @@
 
 #include "header.h"
 
-file_data_t* get_arg_data(int argc, char **argv);
-wav_header_t* read_header(char* input_file_name);
-int16_t* get_wav_data(wav_header_t *wav_header, file_data_t *file_data);
-int store_wav_data(wav_header_t *wav_header, file_data_t *file_data, int16_t *data);
+arg_data_t* get_arg_data(int argc, char **argv);
+wav_header_t* read_header(void* input_file_name);
+int get_wav_data(int16_t **data, wav_header_t **wav_header, arg_data_t *arg_data);
+int store_wav_data(wav_header_t *wav_header, arg_data_t *arg_data, int16_t *data);
 
 #endif

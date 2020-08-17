@@ -6,8 +6,8 @@
 
 int main(int argc, char  **argv)
 {
-    file_data_t *file_data = get_arg_data(argc, argv);
-    wav_header_t *wav_header = read_header(file_data->input_file);
+    arg_data_t *arg_data = get_arg_data(argc, argv);
+    wav_header_t *wav_header = read_header(arg_data->input_file);
 
     printf("Cabeçalho do arquivo: \n");
     printf("%17s : %.4s\n", "riff tag", wav_header->chunk_id);

@@ -6,12 +6,17 @@
 
 int main(int argc, char  **argv)
 {
-    file_data_t *file_data = get_arg_data(argc, argv);
-    wav_header_t *wav_header = read_header(file_data->input_file);
+    // parse dos argumentos do terminal
+    arg_data_t *arg_data = get_arg_data(argc, argv);
 
-    int16_t *data = get_wav_data(wav_header, file_data);
+    // fetch das informações do arquivo de entrada
+    wav_header_t *wav_header = NULL;
+    int16_t *data = NULL;
+    get_wav_data(&data, &wav_header, arg_data);
 
     int size = wav_header->sub_chunk2_size / sizeof(int16_t);
+
+    // inverte o vetor, invertendo a musica
     int aux;
     for (int i = 0; i < size / 2; i++) {
         aux = data[i];
@@ -19,8 +24,8 @@ int main(int argc, char  **argv)
         data[size-i] = aux;
     }
 
-    store_wav_data(wav_header, file_data, data);
-    printf("fim: audio invertido\n");
+    // armazena o vetor no aqruivo
+    store_wav_data(wav_header, arg_data, data);
 
     return 0;
 }
