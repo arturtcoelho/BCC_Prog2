@@ -15,7 +15,7 @@ int main(int argc, char  **argv)
     get_wav_data(&data, &wav_header, arg_data);
     
     // cuida do valor do argumento
-    if (arg_data->level >= 0 || arg_data->level < 10) {
+    if ((arg_data->level <= 0) || (arg_data->level > 10)) {
         arg_data->level = DEF_VOL;
         fprintf(stderr, "wavvol: level invalido ajustado para vol padrão\n");
     }

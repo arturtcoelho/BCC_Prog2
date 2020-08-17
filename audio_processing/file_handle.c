@@ -147,17 +147,26 @@ int get_wav_data(int16_t **data, wav_header_t **wav_header, arg_data_t *arg_data
 
 int store_wav_data(wav_header_t *wav_header, arg_data_t *arg_data, int16_t *data){
 
-    FILE* output_file = fopen(arg_data->output_file, "w+");
+// abre o arquivo de output
+    FILE* output_file = NULL;
+
+    if (arg_data->output_file == stdout){
+        output_file = arg_data->output_file;
+    } else {
+        output_file = fopen(arg_data->output_file, "w+");
+    }
 
     if (output_file == NULL){
         fprintf(stderr, "erro de criação de arquivo\n");
         exit(ERR_CRIACAO_ARQ);
     }
 
+// escreve o cabeçalho
     if (!fwrite(wav_header, sizeof(wav_header_t), 1, output_file)){
         fprintf(stderr, "erro de escrita de arquivo\n");
         exit(ERR_ESCRITA_ARQ);
     }
+
     if (!fwrite(data, sizeof(int16_t), wav_header->sub_chunk2_size / sizeof(int16_t), output_file)) {
         fprintf(stderr, "erro de escrita de arquivo\n");
         exit(ERR_ESCRITA_ARQ);
