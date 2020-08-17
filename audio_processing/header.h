@@ -8,10 +8,12 @@
 #define ERR_CRIACAO_ARQ 5
 #define ERR_ESCRITA_ARQ 6
 
-#define MAX_16 32767.0
+#define MAX_16 31129.0
 
 #define DEF_NORM 0.95
 #define DEF_VOL 1
+#define DEF_ECO 0.5
+#define DEF_DELAY 1000
 
 #include <inttypes.h>
 
