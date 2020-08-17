@@ -12,12 +12,15 @@ int main(int argc, char  **argv)
     int16_t *data = get_wav_data(wav_header, file_data);
 
     int size = wav_header->sub_chunk2_size / sizeof(int16_t);
-    for (int i = 0; i < size; i++) {
-        data[i] = data[i] * file_data->level;
+    int aux;
+    for (int i = 0; i < size / 2; i++) {
+        aux = data[i];
+        data[i] = data[size-i];
+        data[size-i] = aux;
     }
 
     store_wav_data(wav_header, file_data, data);
-    printf("fim: volume modificado em %f\n", file_data->level);
+    printf("fim: audio invertido\n");
 
     return 0;
 }
