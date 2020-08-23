@@ -7,6 +7,8 @@
 #include <ctype.h>
 #include "dicionario.h"
 
+#define MAX_WORD 100
+
 int main() {
 
     // configura o local do programa para aceitar palavras acentuadas etc
@@ -18,7 +20,7 @@ int main() {
     int tam;
 
     unsigned char caractere;
-    unsigned char palavra[100];
+    unsigned char palavra[MAX_WORD];
 
     // carrega o dicionario em memória
     dicionario = carregar_dicionario(&tam);

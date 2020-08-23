@@ -76,7 +76,7 @@ unsigned char **carregar_dicionario(int *tam){
 // implementado em busca binaria
 int palavra_valida(unsigned char *palavra, unsigned char **dicionario, int tam){
 
-	// esse confere se uma palavra consiste de apenas um caractere, 
+	// confere se uma palavra consiste de apenas um caractere, 
 	// caso essa palavra seja um caractere alfabetico é considerado válido
 	// e portanto não é marcado entre colchetes
 
