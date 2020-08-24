@@ -6,6 +6,7 @@
 #include "header.h"
 #include "file_handle.h"
 
+// parseamento dos argumentos gerais
 arg_data_t* get_arg_data(int argc, char **argv){
 
     // aloca espaço para as informações de argumento
@@ -64,6 +65,32 @@ arg_data_t* get_arg_data(int argc, char **argv){
     return arg_data;
 }
 
+// parseamento de multiplos arquivos
+char** get_mult_args(int argc, char **argv, int *num_arq){
+    // vetor de ponteiros para os nomes de arquivos
+    char** files = malloc(MAX_ARGS * sizeof(char**));
+
+    int num = 0;
+    int i = 1;
+    
+    if (!strcmp(argv[1], "-o") && argc > 2){
+        // se houver opção de saída
+        i = 3;
+    }
+
+    while (i < argc){ // para cada argumento
+        // copia os arquivos
+        files[num] = malloc(sizeof(char*));
+        files[num] = argv[i];
+        num++;
+        i++;
+    }
+
+    *num_arq = num;
+
+    return files;
+}
+
 wav_header_t* read_header(void* input_file_name){
 
 // abre o arquivo
@@ -94,22 +121,22 @@ wav_header_t* read_header(void* input_file_name){
     return wav_header;
 }
 
-int get_wav_data(int16_t **data, wav_header_t **wav_header, arg_data_t *arg_data){
+int get_wav_data(int16_t **data, wav_header_t **wav_header, void* input_name){
 
 // abre o aquivo para leitura
     FILE* input_file = NULL;
 
-    if (arg_data->input_file == stdin){
-        input_file = arg_data->input_file;
+    if (input_name == stdin){
+        input_file = input_name;
     } else {
-        input_file = fopen(arg_data->input_file, "r");
+        input_file = fopen(input_name, "r");
         if (input_file == NULL){
             fprintf(stderr, "arquivo de input invalido: %p\n", input_file);
             exit(ERR_ARQ_NAO_ENCONTRADO);
         }
     }
 
-// aloca memorias
+// aloca cabeçalho
     *wav_header = (wav_header_t*)malloc(sizeof(wav_header_t));
     if (*wav_header == NULL){
         fprintf(stderr, "Bad malloc\n");
@@ -119,6 +146,7 @@ int get_wav_data(int16_t **data, wav_header_t **wav_header, arg_data_t *arg_data
 // le o cabeçalho
     fread(*wav_header, sizeof(wav_header_t), 1, input_file);
 
+// aloca o espaço de dados
     *data = malloc((*wav_header)->sub_chunk2_size);
 
     if (*data == NULL){

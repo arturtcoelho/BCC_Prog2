@@ -12,7 +12,7 @@ int main(int argc, char  **argv)
     // le o arquivo passado por argumento
     wav_header_t *wav_header = NULL;
     int16_t *data = NULL;
-    get_wav_data(&data, &wav_header, arg_data);
+    get_wav_data(&data, &wav_header, arg_data->input_file);
     
     // cuida do valor do argumento
     if ((arg_data->level <= 0) || (arg_data->level > 10)) {

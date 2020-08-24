@@ -15,6 +15,10 @@
 #define DEF_ECO 0.5
 #define DEF_DELAY 1000
 
+#define MAX_ARGS 16
+
+#define ERR_CAT 100.0
+
 #include <inttypes.h>
 
 typedef struct wav_header {
@@ -40,6 +44,7 @@ typedef struct arg_data {
     float level;
     float time;
     void* input_file;
+    char** mult_inputs;
     void* output_file;
 } arg_data_t;
 

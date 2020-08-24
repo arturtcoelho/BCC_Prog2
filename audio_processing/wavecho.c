@@ -26,11 +26,11 @@ int main(int argc, char  **argv)
 
     // para cada elemento, adiciona-se o eco correspondente
     int size = wav_header->sub_chunk2_size / sizeof(int16_t);
-    int dalay = arg_data->time * (float)wav_header->sample_rate / 1000.0;
+    int delay = arg_data->time * (float)wav_header->sample_rate / 1000.0;
 
     int echo_value;
     for (int i = 0; i < size; i++) {
-        echo_value = data[i-dalay >= 0 ? i-dalay : i] * arg_data->level + data[i];
+        echo_value = data[i-delay >= 0 ? i-delay : i] * arg_data->level + data[i];
         data[i] = echo_value < MAX_16 ? echo_value : MAX_16;
     }
 

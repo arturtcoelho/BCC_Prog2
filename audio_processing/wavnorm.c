@@ -13,7 +13,7 @@ int main(int argc, char  **argv)
     // fetch das informações do arquivo de entrada
     wav_header_t *wav_header = NULL;
     int16_t *data = NULL;
-    get_wav_data(&data, &wav_header, arg_data);
+    get_wav_data(&data, &wav_header, arg_data->input_file);
 
     int size = wav_header->sub_chunk2_size / sizeof(int16_t);
 
