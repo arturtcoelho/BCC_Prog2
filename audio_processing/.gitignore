@@ -7,3 +7,5 @@ wavnorm
 wavrev
 wavecho
 out
+
+*.o

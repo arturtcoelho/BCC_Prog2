@@ -15,11 +15,11 @@ int main(int argc, char  **argv)
     get_wav_data(&data, &wav_header, arg_data);
     
     // cuida do valor do argumento
-    if ((arg_data->level < 0) || (arg_data->level > 1)) {
+    if ((arg_data->level <= 0) || (arg_data->level > 1)) {
         arg_data->level = DEF_ECO;
         fprintf(stderr, "wavecho: level invalido ajustado para echo padrão\n");
     }
-    if (arg_data->time < 0) {
+    if (arg_data->time <= 0) {
         arg_data->time = DEF_DELAY;
         fprintf(stderr, "wavecho: time invalido ajustado para time padrão\n");
     }

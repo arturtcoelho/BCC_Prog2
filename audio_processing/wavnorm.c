@@ -26,7 +26,7 @@ int main(int argc, char  **argv)
     }
 
     // resolução de erro em caso de argumento com valor inválido
-    if (arg_data->level < 0 || arg_data->level > 1) {
+    if (arg_data->level <= 0 || arg_data->level > 1) {
         arg_data->level = DEF_NORM;
         fprintf(stderr, "wavnorm: level invalido ajustado para nor padrão\n");
     }

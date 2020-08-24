@@ -1,14 +1,23 @@
-wavinfo: wavinfo.c file_handle.h file_handle.c header.h
-	gcc -o wavinfo wavinfo.c file_handle.c -Wall
+CFLAGS = -Wall
 
-wavvol: wavvol.c file_handle.h file_handle.c header.h
-	gcc -o wavvol wavvol.c file_handle.c -Wall
+all: wavinfo wavvol wavrev wavnorm wavecho
 
-wavrev: wavrev.c file_handle.h file_handle.c header.h
-	gcc -o wavrev wavrev.c file_handle.c -Wall
+file_handle.o: file_handle.h file_handle.c header.h
 
-wavnorm: wavnorm.c file_handle.h file_handle.c header.h 
-	gcc -o wavnorm wavnorm.c file_handle.c -Wall -lm
+wavinfo.o: file_handle.h header.h file_handle.o wavinfo.c  
+wavecho.o: file_handle.h header.h file_handle.o wavecho.c 
+wavnorm.o: file_handle.h header.h file_handle.o wavnorm.c 
+wavrev.o: file_handle.h header.h file_handle.o wavrev.c
+wavvol.o: file_handle.h header.h file_handle.o wavvol.c
 
-wavecho: wavecho.c file_handle.h file_handle.c header.h 
-	gcc -o wavecho wavecho.c file_handle.c -Wall -lm
+wavinfo: wavinfo.o file_handle.o
+wavvol: wavvol.o file_handle.o
+wavrev: wavrev.o file_handle.o
+wavnorm: wavnorm.o file_handle.o
+wavecho: wavecho.o file_handle.o
+
+clean: all
+	-rm -f ~. *.o
+
+purge:
+	-rm -f ~. wavinfo wavecho wavnorm wavrev wavvol
