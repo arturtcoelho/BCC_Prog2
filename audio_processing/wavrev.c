@@ -3,6 +3,7 @@
 
 #include "header.h"
 #include "file_handle.h"
+#include "data_handler.h"
 
 int main(int argc, char  **argv)
 {
@@ -12,17 +13,9 @@ int main(int argc, char  **argv)
     // fetch das informações do arquivo de entrada
     wav_header_t *wav_header = NULL;
     int16_t *data = NULL;
-    get_wav_data(&data, &wav_header, arg_data->input_file);
+    get_wav_data(&data, &wav_header, arg_data->input_file_real);
 
-    int size = wav_header->sub_chunk2_size / sizeof(int16_t);
-
-    // inverte o vetor, invertendo a musica
-    int aux;
-    for (int i = 0; i < size / 2; i++) {
-        aux = data[i];
-        data[i] = data[size-i];
-        data[size-i] = aux;
-    }
+    reversor(arg_data, wav_header, data);
 
     // armazena o vetor no aqruivo
     store_wav_data(wav_header, arg_data, data);

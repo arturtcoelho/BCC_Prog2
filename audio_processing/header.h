@@ -7,6 +7,7 @@
 #define ERR_LEITURA_DADOS 4
 #define ERR_CRIACAO_ARQ 5
 #define ERR_ESCRITA_ARQ 6
+#define DATA_ERR 100
 
 #define MAX_16 31129.0
 
@@ -20,6 +21,7 @@
 #define ERR_CAT 100.0
 
 #include <inttypes.h>
+#include <stdio.h>
 
 typedef struct wav_header {
     // 
@@ -43,6 +45,7 @@ typedef struct wav_header {
 typedef struct arg_data {
     float level;
     float time;
+    FILE* input_file_real;
     void* input_file;
     char** mult_inputs;
     void* output_file;

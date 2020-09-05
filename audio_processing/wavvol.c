@@ -3,6 +3,7 @@
 
 #include "header.h"
 #include "file_handle.h"
+#include "data_handler.h"
 
 int main(int argc, char  **argv)
 {
@@ -12,19 +13,10 @@ int main(int argc, char  **argv)
     // le o arquivo passado por argumento
     wav_header_t *wav_header = NULL;
     int16_t *data = NULL;
-    get_wav_data(&data, &wav_header, arg_data->input_file);
+    get_wav_data(&data, &wav_header, arg_data->input_file_real);
     
-    // cuida do valor do argumento
-    if ((arg_data->level <= 0) || (arg_data->level > 10)) {
-        arg_data->level = DEF_VOL;
-        fprintf(stderr, "wavvol: level invalido ajustado para vol padrão\n");
-    }
-
-    // para cada elemento, multiplica sua amplitude pelo valor estabelecido
-    int size = wav_header->sub_chunk2_size / sizeof(int16_t);
-    for (int i = 0; i < size; i++) {
-        data[i] = data[i] * arg_data->level;
-    }
+    // faz a alteração de volume
+    volume_changer(arg_data, wav_header, data);
 
     // armazena o vetor no aqruivo
     store_wav_data(wav_header, arg_data, data);
