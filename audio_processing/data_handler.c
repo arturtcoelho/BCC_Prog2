@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "header.h"
+#include "file_handle.h"
 
 // impressão de dados do cabeçalho
 void print_wav_info(wav_header_t* wav_header){
@@ -77,5 +79,62 @@ void reversor(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
         aux = data[i];
         data[i] = data[size-i];
         data[size-i] = aux;
+    }
+}
+
+void echo_maker(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
+        
+    // cuida do valor do argumento
+    if ((arg_data->level <= 0) || (arg_data->level > 1)) {
+        arg_data->level = DEF_ECO;
+        fprintf(stderr, "wavecho: level invalido ajustado para echo padrão\n");
+    }
+    if (arg_data->time <= 0) {
+        arg_data->time = DEF_DELAY;
+        fprintf(stderr, "wavecho: time invalido ajustado para time padrão\n");
+    }
+
+    // para cada elemento, adiciona-se o eco correspondente
+    int size = wav_header->sub_chunk2_size / sizeof(int16_t);
+    int delay = arg_data->time * (float)wav_header->sample_rate / 1000.0;
+
+    int echo_value;
+    for (int i = 0; i < size; i++) {
+        echo_value = data[i-delay >= 0 ? i-delay : i] * arg_data->level + data[i];
+        data[i] = echo_value < MAX_16 ? echo_value : MAX_16;
+    }
+
+}
+
+void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final){
+
+    // leitura de dados de multiplos arquivos
+    int total_data = 0;
+    *wav_header_final = malloc(sizeof(wav_header_t));
+
+    for (int i = 0; i < num_arq; i++)
+    {
+        if (arg_data->mult_inputs[i])
+            get_wav_data(&(data[i]), &(wav_headers[i]), arg_data->mult_inputs[i]);
+        else {
+            fprintf(stderr, "Erro de leitura de arquivo\n");
+            exit(ERR_LEITURA_DADOS);
+        }
+        total_data += wav_headers[i]->sub_chunk2_size;
+    }
+
+    // concatenação de dados de multiplos arquivos
+    memcpy(*wav_header_final, wav_headers[0], sizeof(wav_header_t));
+
+    (*wav_header_final)->sub_chunk2_size = total_data;
+    (*wav_header_final)->chunk_size = total_data + DIFF_DATA_SIZE;
+
+    *data_final = malloc(total_data * sizeof(int16_t));
+
+    int displacement = 0;
+    for (int i = 0; i < num_arq; i++)
+    {   
+        memcpy((*data_final + displacement), data[i], wav_headers[i]->sub_chunk2_size);
+        displacement += wav_headers[i]->sub_chunk2_size / 2;
     }
 }

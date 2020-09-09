@@ -6,6 +6,8 @@
 #include "header.h"
 #include "file_handle.h"
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 // parseamento dos argumentos gerais
 arg_data_t* get_arg_data(int argc, char **argv){
 
@@ -68,23 +70,23 @@ arg_data_t* get_arg_data(int argc, char **argv){
     return arg_data;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 // parseamento de multiplos arquivos
-char** get_mult_args(int argc, char **argv, int *num_arq){
+FILE** get_mult_args(int argc, char **argv, int *num_arq){
     // vetor de ponteiros para os nomes de arquivos
-    char** files = malloc(MAX_ARGS * sizeof(char**));
+    FILE** files = malloc(MAX_ARGS * sizeof(FILE**));
 
     int num = 0;
     int i = 1;
-    
-    if (!strcmp(argv[1], "-o") && argc > 2){
-        // se houver opção de saída
+
+    if (!strcmp(argv[1], "-o") && argc > 2){ // se houver opção de saída
         i = 3;
     }
 
     while (i < argc){ // para cada argumento
         // copia os arquivos
-        files[num] = malloc(sizeof(char*));
-        files[num] = argv[i];
+        files[num] = fopen(argv[i], "r");
         num++;
         i++;
     }
@@ -93,6 +95,8 @@ char** get_mult_args(int argc, char **argv, int *num_arq){
 
     return files;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 wav_header_t* read_header(void* input_file){
  
@@ -108,6 +112,9 @@ wav_header_t* read_header(void* input_file){
 
     return wav_header;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 int get_wav_data(int16_t **data, wav_header_t **wav_header, void* input_file){
 
@@ -148,6 +155,8 @@ int get_wav_data(int16_t **data, wav_header_t **wav_header, void* input_file){
     return 1;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 int store_wav_data(wav_header_t *wav_header, arg_data_t *arg_data, int16_t *data){
 
 // abre o arquivo de output
@@ -178,6 +187,8 @@ int store_wav_data(wav_header_t *wav_header, arg_data_t *arg_data, int16_t *data
     fclose(output_file);
     return 1;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void close_files(arg_data_t* arg_data){
     fclose(arg_data->input_file_real);

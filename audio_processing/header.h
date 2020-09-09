@@ -7,6 +7,7 @@
 #define ERR_LEITURA_DADOS 4
 #define ERR_CRIACAO_ARQ 5
 #define ERR_ESCRITA_ARQ 6
+#define ERR_ARG_NUM 7
 #define DATA_ERR 100
 
 #define MAX_16 31129.0
@@ -16,9 +17,8 @@
 #define DEF_ECO 0.5
 #define DEF_DELAY 1000
 
-#define MAX_ARGS 16
-
-#define ERR_CAT 100.0
+#define MAX_ARGS 128
+#define DIFF_DATA_SIZE 36
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -47,7 +47,7 @@ typedef struct arg_data {
     float time;
     FILE* input_file_real;
     void* input_file;
-    char** mult_inputs;
+    FILE** mult_inputs;
     void* output_file;
 } arg_data_t;
 
