@@ -5,6 +5,8 @@
 #include "header.h"
 #include "file_handle.h"
 
+///////////////////////////////////////////////////////////////////////////////////////////
+
 // impressão de dados do cabeçalho
 void print_wav_info(wav_header_t* wav_header){
     if (!wav_header) {
@@ -29,6 +31,8 @@ void print_wav_info(wav_header_t* wav_header){
 
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+
 void volume_changer(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
 
     // cuida do valor do argumento
@@ -44,6 +48,8 @@ void volume_changer(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* dat
     }
 
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
 
 void volume_normalize(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
     int size = wav_header->sub_chunk2_size / sizeof(int16_t);
@@ -70,6 +76,8 @@ void volume_normalize(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* d
 
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+
 void reversor(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
     int size = wav_header->sub_chunk2_size / sizeof(int16_t);
 
@@ -81,6 +89,8 @@ void reversor(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
         data[size-i] = aux;
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
 
 void echo_maker(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
         
@@ -105,6 +115,8 @@ void echo_maker(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
     }
 
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
 
 void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final){
 
@@ -136,5 +148,62 @@ void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** dat
     {   
         memcpy((*data_final + displacement), data[i], wav_headers[i]->sub_chunk2_size);
         displacement += wav_headers[i]->sub_chunk2_size / 2;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+void amplified_stereo(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
+    // cuida do valor do argumento
+    if ((arg_data->level <= 0) || (arg_data->level > 10)) {
+        arg_data->level = DEF_DIFF;
+        fprintf(stderr, "wavwide: level invalido ajustado para diff padrão\n");
+    }
+
+    // faz a alteração de eco estereo
+    int diff;
+    for (int i = 0; i < wav_header->sub_chunk2_size / 2; i++)
+    {
+        // fprintf(stderr, "%d, %d\n", data[i], data[i+1]);
+        diff = data[i]-data[i+1];
+        data[i] = data[i] + (diff * arg_data->level);
+        data[i+1] = data[i+1] - (diff * arg_data->level);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+void mixer(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final){
+
+    // leitura de dados de multiplos arquivos
+    int total_data = 0;
+    *wav_header_final = malloc(sizeof(wav_header_t));
+
+    for (int i = 0; i < num_arq; i++)
+    {
+        if (arg_data->mult_inputs[i])
+            get_wav_data(&(data[i]), &(wav_headers[i]), arg_data->mult_inputs[i]);
+        else {
+            fprintf(stderr, "Erro de leitura de arquivo\n");
+            exit(ERR_LEITURA_DADOS);
+        }
+        total_data = wav_headers[i]->sub_chunk2_size > total_data ? wav_headers[i]->sub_chunk2_size : total_data;
+    }
+
+    // concatenação de dados de multiplos arquivos
+    memcpy(*wav_header_final, wav_headers[0], sizeof(wav_header_t));
+
+    (*wav_header_final)->sub_chunk2_size = total_data;
+    (*wav_header_final)->chunk_size = total_data + DIFF_DATA_SIZE;
+
+    *data_final = malloc(total_data * sizeof(int16_t));
+
+    for (int i = 0; i < num_arq; i++)
+    {   
+        for (int j = 0; j < wav_headers[i]->sub_chunk2_size; j++)
+        {
+            (*data_final)[j] += data[i][j];
+        }
+        
     }
 }

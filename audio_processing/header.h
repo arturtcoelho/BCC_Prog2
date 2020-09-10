@@ -16,6 +16,7 @@
 #define DEF_VOL 1
 #define DEF_ECO 0.5
 #define DEF_DELAY 1000
+#define DEF_DIFF 0.5
 
 #define MAX_ARGS 128
 #define DIFF_DATA_SIZE 36

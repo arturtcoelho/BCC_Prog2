@@ -6,6 +6,9 @@ wavvol
 wavnorm
 wavrev
 wavecho
+wavmix
+wavwide
+
 out
 
 *.o

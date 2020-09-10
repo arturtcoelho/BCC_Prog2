@@ -1,6 +1,6 @@
 CFLAGS = -Wall
 
-all: wavcat wavinfo wavvol wavrev wavnorm wavecho
+all: wavcat wavinfo wavvol wavrev wavnorm wavecho wavwide wavmix
 
 file_handle.o: file_handle.h file_handle.c header.h
 data_handler.o: data_handler.h data_handler.c header.h
@@ -11,6 +11,8 @@ wavecho.o: data_handler.o data_handler.h file_handle.h header.h file_handle.o wa
 wavnorm.o: data_handler.o data_handler.h file_handle.h header.h file_handle.o wavnorm.c 
 wavrev.o: data_handler.o data_handler.h file_handle.h header.h file_handle.o wavrev.c
 wavvol.o: data_handler.o data_handler.h file_handle.h header.h file_handle.o wavvol.c
+wavwide.o: data_handler.o data_handler.h file_handle.h header.h file_handle.o wavwide.c
+wavmix.o: data_handler.o data_handler.h file_handle.h header.h file_handle.o wavmix.c
 
 wavcat: wavcat.o file_handle.o data_handler.o
 wavinfo: wavinfo.o file_handle.o data_handler.o
@@ -18,6 +20,8 @@ wavvol: wavvol.o file_handle.o data_handler.o
 wavrev: wavrev.o file_handle.o data_handler.o
 wavnorm: wavnorm.o file_handle.o data_handler.o
 wavecho: wavecho.o file_handle.o data_handler.o
+wavwide: wavwide.o file_handle.o data_handler.o
+wavmix: wavmix.o file_handle.o data_handler.o
 
 clean: all
 	-rm -f ~. *.o

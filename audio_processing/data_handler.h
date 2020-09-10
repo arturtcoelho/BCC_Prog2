@@ -9,5 +9,7 @@ void volume_normalize(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* d
 void reversor(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data);
 void echo_maker(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data);
 void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final);
+void amplified_stereo(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data);
+void mixer(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final);
 
 #endif
