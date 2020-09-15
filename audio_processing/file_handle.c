@@ -25,8 +25,8 @@ arg_data_t* get_arg_data(int argc, char **argv){
                     fprintf(stderr, "Favor inserir um arquivo de input com a opção -i\n");
                     exit(ERR_ARQ_NAO_ENCONTRADO);
                 }
-                arg_data->input_file_real = fopen(optarg, "r");
-                if (arg_data->input_file_real == NULL){
+                arg_data->input_file = fopen(optarg, "r");
+                if (arg_data->input_file == NULL){
                     fprintf(stderr, "opção -i, arquivo %s não encontrado\n", optarg);
                     exit(ERR_ARQ_NAO_ENCONTRADO);
                 }
@@ -59,8 +59,8 @@ arg_data_t* get_arg_data(int argc, char **argv){
     }
 
     // caso os arquivos de input e output nao sejam selecionados, é utilizado stdin ou stdout
-    if (arg_data->input_file_real == NULL){
-        arg_data->input_file_real = stdin;
+    if (arg_data->input_file == NULL){
+        arg_data->input_file = stdin;
     }
 
     if (arg_data->output_file == NULL){
@@ -191,5 +191,5 @@ int store_wav_data(wav_header_t *wav_header, arg_data_t *arg_data, int16_t *data
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void close_files(arg_data_t* arg_data){
-    fclose(arg_data->input_file_real);
+    fclose(arg_data->input_file);
 }

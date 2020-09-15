@@ -13,7 +13,7 @@ int main(int argc, char  **argv)
     // fetch das informações do arquivo de entrada
     wav_header_t *wav_header = NULL;
     int16_t *data = NULL;
-    get_wav_data(&data, &wav_header, arg_data->input_file_real);
+    get_wav_data(&data, &wav_header, arg_data->input_file);
 
     reversor(arg_data, wav_header, data);
 

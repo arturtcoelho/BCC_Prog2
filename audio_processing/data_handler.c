@@ -1,9 +1,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "header.h"
 #include "file_handle.h"
+
+float vibrato_sen(int i){
+    return sin(i/20) / 2 + 1;
+}
+
+// int16_t* upscale_samples(wav_header_t* wav_header_src,wav_header_t* wav_header_dest, int16_t *data){
+//     int m_factor = wav_header_dest->sample_rate / wav_header_src->sample_rate;
+//     fprintf(stderr, "%d\n", m_factor);
+//     int i;
+//     int16_t *data_final = malloc(wav_header_dest->sub_chunk2_size * sizeof(int16_t));
+//     for (i = 0; i < wav_header_dest->sub_chunk2_size / sizeof(int16_t); i+=(m_factor+1)){
+//         data_final[i] = data[i];
+//         for(int j = 0; j < m_factor; j++){
+//             data_final[i+j] = data[i];
+//         }
+//     }
+//     return data_final;
+// }
+
+
+// int16_t* downscale_samples(wav_header_t* wav_header_src,wav_header_t* wav_header_dest, int16_t *data, int *m_factor){
+//     *m_factor = wav_header_src->sample_rate / wav_header_dest->sample_rate;
+//     int16_t *data_final = malloc(wav_header_src->sub_chunk2_size);
+
+//     for (int i = 0; i < wav_header_src->sub_chunk2_size / 8; i++){
+//         for (int j = 0; j < *m_factor; j++){
+//             data_final[i+j] = data[i * 4];
+//         }
+//     }
+//     fprintf(stderr, "aloco chegou aqui\n");
+
+//     return data_final;
+// }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -138,17 +172,26 @@ void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** dat
     // concatenação de dados de multiplos arquivos
     memcpy(*wav_header_final, wav_headers[0], sizeof(wav_header_t));
 
-    (*wav_header_final)->sub_chunk2_size = total_data;
-    (*wav_header_final)->chunk_size = total_data + DIFF_DATA_SIZE;
-
     *data_final = malloc(total_data * sizeof(int16_t));
 
     int displacement = 0;
     for (int i = 0; i < num_arq; i++)
     {   
+        // if ((*wav_header_final)->sample_rate != wav_headers[i]->sample_rate){
+        //     int m_factor;
+        //     data[i] = channel_extractor(wav_headers[i], data[i]);
+        //     data[i] = downscale_samples(wav_headers[i], *wav_header_final, data[i], &m_factor);
+        //     wav_headers[i]->sample_rate = (*wav_header_final)->sample_rate;
+        //     // total_data -= wav_headers[i]->sub_chunk2_size - wav_headers[i]->sub_chunk2_size / m_factor;
+        //     wav_headers[i]->sub_chunk2_size = wav_headers[i]->sub_chunk2_size / m_factor;
+        // }
         memcpy((*data_final + displacement), data[i], wav_headers[i]->sub_chunk2_size);
         displacement += wav_headers[i]->sub_chunk2_size / 2;
     }
+
+    (*wav_header_final)->sub_chunk2_size = total_data;
+    (*wav_header_final)->chunk_size = total_data + DIFF_DATA_SIZE;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +205,7 @@ void amplified_stereo(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* d
 
     // faz a alteração de eco estereo
     int diff;
-    for (int i = 0; i < wav_header->sub_chunk2_size / 2; i++)
+    for (int i = 0; i < wav_header->sub_chunk2_size / sizeof(int16_t); i++)
     {
         // fprintf(stderr, "%d, %d\n", data[i], data[i+1]);
         diff = data[i]-data[i+1];
@@ -200,10 +243,64 @@ void mixer(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int
 
     for (int i = 0; i < num_arq; i++)
     {   
-        for (int j = 0; j < wav_headers[i]->sub_chunk2_size; j++)
-        {
+        for (int j = 0; j < wav_headers[i]->sub_chunk2_size / sizeof(int16_t); j++) {
             (*data_final)[j] += data[i][j];
         }
         
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+void channel_extractor(arg_data_t* arg_data, wav_header_t* wav_header, int16_t** data){
+    int channels = wav_header->number_of_channels;
+    if (channels == 1)
+        return;
+    wav_header->number_of_channels = 1;
+    wav_header->byte_rate = wav_header->byte_rate / channels;
+    wav_header->block_align = wav_header->block_align / channels;
+    int size = wav_header->sub_chunk2_size;
+    wav_header->sub_chunk2_size = wav_header->sub_chunk2_size / channels;
+    wav_header->chunk_size = wav_header->sub_chunk2_size + DIFF_DATA_SIZE;
+
+    int16_t *data_final = malloc(wav_header->sub_chunk2_size);
+    if (data_final == NULL){
+        fprintf(stderr, "Erro de alocação\n");
+        exit(ERR_BAD_MALLOC);
+    }
+
+    for (int i = 0; i < size/sizeof(int16_t); i += channels){
+        data_final[i/2] = (*data)[i];
+    }
+
+    free(*data);
+    *data = data_final;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+void frequency_modifiew(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
+    if (arg_data->level <= 0 || arg_data->level >= 10){
+        arg_data->level = DEF_FREQ;
+        fprintf(stderr, "wavfreq: level invalido ajustado para freq padrão\n");
+    }
+    wav_header->sample_rate = wav_header->sample_rate * arg_data->level;
+}
+
+void vibrato(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
+
+    if (arg_data->level <= 0 || arg_data->level >= 10){
+        arg_data->level = DEF_VIB;
+        fprintf(stderr, "wavvib: level invalido ajustado para vib padrão\n");
+    }
+
+    double ms = 1000.0/(float)wav_header->sample_rate;
+    // fprintf(stderr, "%f ", ms);
+    for (int i = 0; i < wav_header->sub_chunk2_size/sizeof(int16_t); i++){
+        // fprintf(stderr, "%f ", vibrato_sen(i * ms));
+        data[i] = data[i] * vibrato_sen(i) * arg_data->level;
+    }
+
+    fprintf(stderr, "aqui2\n");
+    
 }

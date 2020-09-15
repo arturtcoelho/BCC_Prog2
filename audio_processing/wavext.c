@@ -14,8 +14,9 @@ int main(int argc, char  **argv)
     wav_header_t *wav_header = NULL;
     int16_t *data = NULL;
     get_wav_data(&data, &wav_header, arg_data->input_file);
-
-    amplified_stereo(arg_data, wav_header, data);
+    
+    // faz a alteração de volume
+    channel_extractor(arg_data, wav_header, &data);
 
     // armazena o vetor no aqruivo
     store_wav_data(wav_header, arg_data, data);

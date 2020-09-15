@@ -8,6 +8,7 @@
 #define ERR_CRIACAO_ARQ 5
 #define ERR_ESCRITA_ARQ 6
 #define ERR_ARG_NUM 7
+#define ERR_SAMPLE 8
 #define DATA_ERR 100
 
 #define MAX_16 31129.0
@@ -17,6 +18,8 @@
 #define DEF_ECO 0.5
 #define DEF_DELAY 1000
 #define DEF_DIFF 0.5
+#define DEF_FREQ 1
+#define DEF_VIB 1
 
 #define MAX_ARGS 128
 #define DIFF_DATA_SIZE 36
@@ -46,8 +49,7 @@ typedef struct wav_header {
 typedef struct arg_data {
     float level;
     float time;
-    FILE* input_file_real;
-    void* input_file;
+    FILE* input_file;
     FILE** mult_inputs;
     void* output_file;
 } arg_data_t;

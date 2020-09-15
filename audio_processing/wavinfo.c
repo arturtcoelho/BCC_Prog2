@@ -8,7 +8,7 @@
 int main(int argc, char  **argv)
 {
     arg_data_t *arg_data = get_arg_data(argc, argv);
-    wav_header_t *wav_header = read_header(arg_data->input_file_real);
+    wav_header_t *wav_header = read_header(arg_data->input_file);
 
     print_wav_info(wav_header);
 
