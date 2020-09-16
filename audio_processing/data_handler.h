@@ -12,7 +12,6 @@ void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** dat
 void amplified_stereo(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data);
 void mixer(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final);
 void channel_extractor(arg_data_t* arg_data, wav_header_t* wav_header, int16_t** data);
-void frequency_modifiew(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data);
-void vibrato(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data);
+void frequency_modifier(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data);
 
 #endif

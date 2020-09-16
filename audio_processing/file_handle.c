@@ -77,6 +77,11 @@ FILE** get_mult_args(int argc, char **argv, int *num_arq){
     // vetor de ponteiros para os nomes de arquivos
     FILE** files = malloc(MAX_ARGS * sizeof(FILE**));
 
+    if (argc <= 1){
+        fprintf(stderr, "insira ao menos um arquivo\n");
+        exit(ERR_ARQ_NAO_ENCONTRADO);
+    }
+
     int num = 0;
     int i = 1;
 
@@ -190,6 +195,16 @@ int store_wav_data(wav_header_t *wav_header, arg_data_t *arg_data, int16_t *data
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void close_files(arg_data_t* arg_data){
+void close_files(arg_data_t* arg_data, int num_arq){
     fclose(arg_data->input_file);
+    fclose(arg_data->output_file);
+    for (int i = 0; i < num_arq; i++){
+        fclose(arg_data->mult_inputs[i]);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void help_menu(){
+    fprintf(stderr, "helpmenu\n");
 }

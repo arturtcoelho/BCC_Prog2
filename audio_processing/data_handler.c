@@ -5,40 +5,6 @@
 
 #include "header.h"
 #include "file_handle.h"
-
-float vibrato_sen(int i){
-    return sin(i/20) / 2 + 1;
-}
-
-// int16_t* upscale_samples(wav_header_t* wav_header_src,wav_header_t* wav_header_dest, int16_t *data){
-//     int m_factor = wav_header_dest->sample_rate / wav_header_src->sample_rate;
-//     fprintf(stderr, "%d\n", m_factor);
-//     int i;
-//     int16_t *data_final = malloc(wav_header_dest->sub_chunk2_size * sizeof(int16_t));
-//     for (i = 0; i < wav_header_dest->sub_chunk2_size / sizeof(int16_t); i+=(m_factor+1)){
-//         data_final[i] = data[i];
-//         for(int j = 0; j < m_factor; j++){
-//             data_final[i+j] = data[i];
-//         }
-//     }
-//     return data_final;
-// }
-
-
-// int16_t* downscale_samples(wav_header_t* wav_header_src,wav_header_t* wav_header_dest, int16_t *data, int *m_factor){
-//     *m_factor = wav_header_src->sample_rate / wav_header_dest->sample_rate;
-//     int16_t *data_final = malloc(wav_header_src->sub_chunk2_size);
-
-//     for (int i = 0; i < wav_header_src->sub_chunk2_size / 8; i++){
-//         for (int j = 0; j < *m_factor; j++){
-//             data_final[i+j] = data[i * 4];
-//         }
-//     }
-//     fprintf(stderr, "aloco chegou aqui\n");
-
-//     return data_final;
-// }
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // impressão de dados do cabeçalho
@@ -279,28 +245,10 @@ void channel_extractor(arg_data_t* arg_data, wav_header_t* wav_header, int16_t**
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-void frequency_modifiew(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
+void frequency_modifier(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
     if (arg_data->level <= 0 || arg_data->level >= 10){
         arg_data->level = DEF_FREQ;
         fprintf(stderr, "wavfreq: level invalido ajustado para freq padrão\n");
     }
     wav_header->sample_rate = wav_header->sample_rate * arg_data->level;
-}
-
-void vibrato(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
-
-    if (arg_data->level <= 0 || arg_data->level >= 10){
-        arg_data->level = DEF_VIB;
-        fprintf(stderr, "wavvib: level invalido ajustado para vib padrão\n");
-    }
-
-    double ms = 1000.0/(float)wav_header->sample_rate;
-    // fprintf(stderr, "%f ", ms);
-    for (int i = 0; i < wav_header->sub_chunk2_size/sizeof(int16_t); i++){
-        // fprintf(stderr, "%f ", vibrato_sen(i * ms));
-        data[i] = data[i] * vibrato_sen(i) * arg_data->level;
-    }
-
-    fprintf(stderr, "aqui2\n");
-    
 }
