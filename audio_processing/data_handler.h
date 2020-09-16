@@ -1,3 +1,4 @@
+// Artur Temporal Coelho GRR20190471 
 #ifndef __DATA_HANDLER__
 #define __DATA_HANDLER__
 

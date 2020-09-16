@@ -1,3 +1,4 @@
+// Artur Temporal Coelho GRR20190471 
 #ifndef __HEADER__
 #define __HEADER__
 

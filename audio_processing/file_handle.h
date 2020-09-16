@@ -1,3 +1,4 @@
+// Artur Temporal Coelho GRR20190471 
 #ifndef __FILE_HANDLE__
 #define __FILE_HANDLE__
 

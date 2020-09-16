@@ -1,3 +1,4 @@
+// Artur Temporal Coelho GRR20190471 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,6 +34,7 @@ void print_wav_info(wav_header_t* wav_header){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// altera a amplitude de cada amostra
 void volume_changer(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
 
     // cuida do valor do argumento
@@ -43,16 +45,25 @@ void volume_changer(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* dat
 
     // para cada elemento, multiplica sua amplitude pelo valor estabelecido
     int size = wav_header->sub_chunk2_size / sizeof(int16_t);
+    int volume;
     for (int i = 0; i < size; i++) {
-        data[i] = data[i] * arg_data->level;
+        volume = data[i] * arg_data->level;
+        data[i] = volume < MAX_16 ? volume : MAX_16;
     }
 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// normaliza o audio para um volume próximo do máximo
 void volume_normalize(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
     int size = wav_header->sub_chunk2_size / sizeof(int16_t);
+
+    // resolução de erro em caso de argumento com valor inválido
+    if (arg_data->level <= 0 || arg_data->level > 1) {
+        arg_data->level = DEF_NORM;
+        fprintf(stderr, "wavnorm: level invalido ajustado para nor padrão\n");
+    }
 
     // descobre o maior valor
     float max = 0;
@@ -60,12 +71,6 @@ void volume_normalize(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* d
         if (data[i] > max){
             max = data[i];
         }
-    }
-
-    // resolução de erro em caso de argumento com valor inválido
-    if (arg_data->level <= 0 || arg_data->level > 1) {
-        arg_data->level = DEF_NORM;
-        fprintf(stderr, "wavnorm: level invalido ajustado para nor padrão\n");
     }
 
     // normaliza o volume do arquivo
@@ -78,6 +83,7 @@ void volume_normalize(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* d
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// inverte as amostras
 void reversor(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
     int size = wav_header->sub_chunk2_size / sizeof(int16_t);
 
@@ -92,6 +98,7 @@ void reversor(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// realiza o eco do audio por um valor anterior
 void echo_maker(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
         
     // cuida do valor do argumento
@@ -118,12 +125,13 @@ void echo_maker(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// concatena os arquivos de audio
 void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final){
 
-    // leitura de dados de multiplos arquivos
     int total_data = 0;
     *wav_header_final = malloc(sizeof(wav_header_t));
 
+    // leitura de dados de multiplos arquivos
     for (int i = 0; i < num_arq; i++)
     {
         if (arg_data->mult_inputs[i])
@@ -143,14 +151,9 @@ void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** dat
     int displacement = 0;
     for (int i = 0; i < num_arq; i++)
     {   
-        // if ((*wav_header_final)->sample_rate != wav_headers[i]->sample_rate){
-        //     int m_factor;
-        //     data[i] = channel_extractor(wav_headers[i], data[i]);
-        //     data[i] = downscale_samples(wav_headers[i], *wav_header_final, data[i], &m_factor);
-        //     wav_headers[i]->sample_rate = (*wav_header_final)->sample_rate;
-        //     // total_data -= wav_headers[i]->sub_chunk2_size - wav_headers[i]->sub_chunk2_size / m_factor;
-        //     wav_headers[i]->sub_chunk2_size = wav_headers[i]->sub_chunk2_size / m_factor;
-        // }
+        if ((*wav_header_final)->sample_rate != wav_headers[i]->sample_rate){
+            fprintf(stderr, "AVISO: Diferença entre taxa de amostra, resultados podem ser diferente do esperado\n");
+        }
         memcpy((*data_final + displacement), data[i], wav_headers[i]->sub_chunk2_size);
         displacement += wav_headers[i]->sub_chunk2_size / 2;
     }
@@ -162,6 +165,7 @@ void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** dat
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// amplifica o efeito estereo realizando um eco entre os canais
 void amplified_stereo(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
     // cuida do valor do argumento
     if ((arg_data->level <= 0) || (arg_data->level > 10)) {
@@ -182,6 +186,7 @@ void amplified_stereo(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* d
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// mistura as amostras de audio
 void mixer(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final){
 
     // leitura de dados de multiplos arquivos
@@ -208,7 +213,10 @@ void mixer(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int
     *data_final = malloc(total_data * sizeof(int16_t));
 
     for (int i = 0; i < num_arq; i++)
-    {   
+    {  
+        if ((*wav_header_final)->sample_rate != wav_headers[i]->sample_rate){
+            fprintf(stderr, "AVISO: Diferença entre taxa de amostra, resultados podem ser diferente do esperado\n");
+        }
         for (int j = 0; j < wav_headers[i]->sub_chunk2_size / sizeof(int16_t); j++) {
             (*data_final)[j] += data[i][j];
         }
@@ -218,6 +226,7 @@ void mixer(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// extrai um canal de audio de um arquivo com multiplos canais
 void channel_extractor(arg_data_t* arg_data, wav_header_t* wav_header, int16_t** data){
     int channels = wav_header->number_of_channels;
     if (channels == 1)
@@ -245,6 +254,7 @@ void channel_extractor(arg_data_t* arg_data, wav_header_t* wav_header, int16_t**
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// modifica a taxa de amostragem do arquivo
 void frequency_modifier(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
     if (arg_data->level <= 0 || arg_data->level >= 10){
         arg_data->level = DEF_FREQ;
