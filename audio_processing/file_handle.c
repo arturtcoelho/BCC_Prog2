@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "header.h"
 #include "file_handle.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14,12 +13,17 @@ arg_data_t* get_arg_data(int argc, char **argv){
 
     // aloca espaço para as informações de argumento
     arg_data_t *arg_data = malloc(sizeof(arg_data_t));
-    
+    arg_data->input_file = NULL;
+    arg_data->output_file = NULL;
+    arg_data->mult_inputs = NULL;
+    arg_data->level = 0;
+    arg_data->time = 0;
+    arg_data->safe = 0;
     int opt;
 
     // utiliza a função do unistd, getopt para processar as informações dos argumentos
     opterr = 0;
-    while ((opt = getopt(argc, argv, "i:o:l:t:")) != -1){
+    while ((opt = getopt(argc, argv, "i:o:l:t:s")) != -1){
         switch (opt) {
             case 'i':
                 if (!optarg) {
@@ -27,15 +31,18 @@ arg_data_t* get_arg_data(int argc, char **argv){
                     exit(ERR_ARQ_NAO_ENCONTRADO);
                 }
                 arg_data->input_file = fopen(optarg, "r");
-                if (arg_data->input_file == NULL){
+                if (!arg_data->input_file){
                     fprintf(stderr, "opção -i, arquivo %s não encontrado\n", optarg);
                     exit(ERR_ARQ_NAO_ENCONTRADO);
                 }
                 break;
             case 'o':
-                arg_data->output_file = malloc(strlen(optarg));
-                strcpy(arg_data->output_file, optarg);
-                if (arg_data->output_file == NULL){
+                if (!optarg) {
+                    fprintf(stderr, "Favor inserir um arquivo de input com a opção -i\n");
+                    exit(ERR_ARQ_NAO_ENCONTRADO);
+                }
+                arg_data->output_file = fopen(optarg, "w");
+                if (!arg_data->output_file){
                     fprintf(stderr, "opção -o, arquivo %s não encontrado\n", optarg);
                     exit(ERR_ARQ_NAO_ENCONTRADO);
                 }
@@ -53,6 +60,9 @@ arg_data_t* get_arg_data(int argc, char **argv){
                     exit(ERR_ARG_NAO_ENCONTRADO);
                 }
                 arg_data->time = (float)atof(optarg);
+                break;
+            case 's':
+                arg_data->safe = 1;
                 break;
             default:
                 break;
@@ -86,11 +96,11 @@ FILE** get_mult_args(int argc, char **argv, int *num_arq){
     int num = 0;
     int i = 1;
 
-    if (!strcmp(argv[1], "-o") && argc > 2){ // se houver opção de saída
-        i = 3;
-    }
-
     while (i < argc){ // para cada argumento
+        if (!strcmp(argv[i], "-o"))
+            i+=2;
+        if (!strcmp(argv[i], "-s"))
+            i++;
         // copia os arquivos
         files[num] = fopen(argv[i], "r");
         num++;
@@ -165,14 +175,7 @@ int get_wav_data(int16_t **data, wav_header_t **wav_header, void* input_file){
 
 int store_wav_data(wav_header_t *wav_header, arg_data_t *arg_data, int16_t *data){
 
-// abre o arquivo de output
-    FILE* output_file = NULL;
-
-    if (arg_data->output_file == stdout){
-        output_file = arg_data->output_file;
-    } else {
-        output_file = fopen(arg_data->output_file, "w+");
-    }
+    FILE* output_file = arg_data->output_file;
 
     if (output_file == NULL){
         fprintf(stderr, "erro de criação de arquivo\n");
@@ -190,7 +193,6 @@ int store_wav_data(wav_header_t *wav_header, arg_data_t *arg_data, int16_t *data
         exit(ERR_ESCRITA_ARQ);
     }
 
-    fclose(output_file);
     return 1;
 }
 

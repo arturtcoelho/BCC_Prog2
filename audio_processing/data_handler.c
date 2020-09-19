@@ -4,8 +4,20 @@
 #include <string.h>
 #include <math.h>
 
-#include "header.h"
 #include "file_handle.h"
+#include "data_handler.h"
+
+// descobre o maior valor de uma amostra
+int16_t max_value(wav_header_t* wav_header, int16_t* data){
+    int16_t max = 0;
+    for (int i = 0; i < wav_header->sub_chunk2_size/sizeof(int16_t); i++) {
+        if (data[i] > max){
+            max = abs(data[i]);
+        }
+    }
+    return max;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // impressão de dados do cabeçalho
@@ -126,28 +138,7 @@ void echo_maker(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* data){
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // concatena os arquivos de audio
-void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final){
-
-    int total_data = 0;
-    *wav_header_final = malloc(sizeof(wav_header_t));
-
-    // leitura de dados de multiplos arquivos
-    for (int i = 0; i < num_arq; i++)
-    {
-        if (arg_data->mult_inputs[i])
-            get_wav_data(&(data[i]), &(wav_headers[i]), arg_data->mult_inputs[i]);
-        else {
-            fprintf(stderr, "Erro de leitura de arquivo\n");
-            exit(ERR_LEITURA_DADOS);
-        }
-        total_data += wav_headers[i]->sub_chunk2_size;
-    }
-
-    // concatenação de dados de multiplos arquivos
-    memcpy(*wav_header_final, wav_headers[0], sizeof(wav_header_t));
-
-    *data_final = malloc(total_data * sizeof(int16_t));
-
+void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final, int total_data){
     int displacement = 0;
     for (int i = 0; i < num_arq; i++)
     {   
@@ -157,10 +148,6 @@ void concatenate(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** dat
         memcpy((*data_final + displacement), data[i], wav_headers[i]->sub_chunk2_size);
         displacement += wav_headers[i]->sub_chunk2_size / 2;
     }
-
-    (*wav_header_final)->sub_chunk2_size = total_data;
-    (*wav_header_final)->chunk_size = total_data + DIFF_DATA_SIZE;
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -187,31 +174,7 @@ void amplified_stereo(arg_data_t* arg_data, wav_header_t* wav_header, int16_t* d
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // mistura as amostras de audio
-void mixer(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final){
-
-    // leitura de dados de multiplos arquivos
-    int total_data = 0;
-    *wav_header_final = malloc(sizeof(wav_header_t));
-
-    for (int i = 0; i < num_arq; i++)
-    {
-        if (arg_data->mult_inputs[i])
-            get_wav_data(&(data[i]), &(wav_headers[i]), arg_data->mult_inputs[i]);
-        else {
-            fprintf(stderr, "Erro de leitura de arquivo\n");
-            exit(ERR_LEITURA_DADOS);
-        }
-        total_data = wav_headers[i]->sub_chunk2_size > total_data ? wav_headers[i]->sub_chunk2_size : total_data;
-    }
-
-    // concatenação de dados de multiplos arquivos
-    memcpy(*wav_header_final, wav_headers[0], sizeof(wav_header_t));
-
-    (*wav_header_final)->sub_chunk2_size = total_data;
-    (*wav_header_final)->chunk_size = total_data + DIFF_DATA_SIZE;
-
-    *data_final = malloc(total_data * sizeof(int16_t));
-
+void mixer(arg_data_t* arg_data, wav_header_t** wav_headers, int16_t** data, int num_arq, wav_header_t** wav_header_final, int16_t** data_final, int total_data){
     for (int i = 0; i < num_arq; i++)
     {  
         if ((*wav_header_final)->sample_rate != wav_headers[i]->sample_rate){

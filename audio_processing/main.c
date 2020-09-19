@@ -1,13 +1,29 @@
 // Artur Temporal Coelho GRR20190471 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "header.h"
-#include "file_handle.h"
 #include "data_handler.h"
+#include "file_handle.h"
 
-//////////////////////////////////////////////////////////////////////
+// define os códigos dos filtros
+#define WAVINFO 1
+#define WAVVOL 2
+#define WAVNORM 3
+#define WAVECHO 4
+#define WAVREV 5
+#define WAVWIDE 6
+#define WAVEXT 7 
+#define WAVFREQ 8
+#define WAVMIX 11
+#define WAVCAT 12
+
+// define os padroes de segurança
+#define ECHO_SAFE 1.25
+#define WIDE_SAFE 2.5
+
+//////////////////////////////////////////////////////////////////////////////
 
 // fornece o codigo definido para os filtros
 int get_filter_code(char* filter_name){
@@ -58,41 +74,71 @@ int single_input(int code){
 
 int main(int argc, char  **argv)
 {
-    fprintf(stderr, "main: %s\n", argv[0]);
+    // define qual filtro foi passado por link
     int filter_code = get_filter_code(argv[0]);
 
     // le os argumentos passados pelo terminal
     arg_data_t *arg_data = get_arg_data(argc, argv);
+    int safe = arg_data->safe;
+
+    int16_t max;
 
     if (single_input(filter_code)){
-        // le o arquivo passado por argumento
+        //////////////////////////////////////////////////////////////////////////
+        // filtros que aceitam apenas um input como argumento ou entrada padrão //
+        //////////////////////////////////////////////////////////////////////////
+
+        // le o arquivo de input passado por argumento ou stdin
         wav_header_t *wav_header = NULL;
         int16_t *data = NULL;
         get_wav_data(&data, &wav_header, arg_data->input_file);
 
+        // realiza a operação de filtro
         switch (filter_code) {
-            case WAVINFO:
+            case WAVINFO: // inprime info
                 print_wav_info(wav_header);
                 break;
-            case WAVVOL:
+
+            case WAVVOL: // muda o volume
+                max = max_value(wav_header, data);
+                if (safe &&  max * arg_data->level > MAX_16){
+                    arg_data->level = (float)max / MAX_16;
+                    fprintf(stderr, "Valor de entrada assegurado\n");
+                }
                 volume_changer(arg_data, wav_header, data);
                 break;
-            case WAVNORM:
+
+            case WAVNORM: // normaliza
                 volume_normalize(arg_data, wav_header, data);
                 break;
-            case WAVECHO:
+
+            case WAVECHO: // efeito eco
+                max = max_value(wav_header, data);
+                if (safe && max + max * arg_data->level > MAX_16){
+                    arg_data->level = (float)max / (MAX_16  * ECHO_SAFE);
+                    fprintf(stderr, "Valor de entrada assegurado %f\n", arg_data->level);
+                }
                 echo_maker(arg_data, wav_header, data);
                 break;
-            case WAVREV:
+
+            case WAVREV: // reverte
                 reversor(arg_data, wav_header, data);
                 break;
-            case WAVWIDE:
+
+            case WAVWIDE: // estereo amplificado
+                max = max_value(wav_header, data);
+                if (safe && max + max * arg_data->level > MAX_16){
+                    arg_data->level = (float)max / (MAX_16 * WIDE_SAFE);
+                    fprintf(stderr, "Valor de entrada assegurado %f\n", arg_data->level);
+                }
                 amplified_stereo(arg_data, wav_header, data);
                 break;
-            case WAVEXT:
+
+            case WAVEXT: // extrai o canal
                 channel_extractor(arg_data, wav_header, &data);
                 break;
-            case WAVFREQ:
+
+            case WAVFREQ: // muda a frequencia da amostra
                 frequency_modifier(arg_data, wav_header, data);
                 break;
         }
@@ -100,14 +146,18 @@ int main(int argc, char  **argv)
         // armazena o vetor no aqruivo
         if (filter_code != WAVINFO)
             store_wav_data(wav_header, arg_data, data);
-        close_files(arg_data, 0);
     
         // libera a memória
-        free(arg_data);
+        close_files(arg_data, 0);
         free(wav_header);
         free(data);
 
     } else {
+
+        ////////////////////////////////////////////////////////////////////////////
+        // tipos de filtros que aceitam multiplos inputs como argumentos          //
+        ////////////////////////////////////////////////////////////////////////////
+
         // le os arquivos passados por argumento
         int num_arq;
         arg_data->mult_inputs = get_mult_args(argc, argv, &num_arq);
@@ -121,29 +171,67 @@ int main(int argc, char  **argv)
         wav_header_t **wav_headers = malloc(num_arq * sizeof(wav_header_t*));
         int16_t **data = malloc(num_arq * sizeof(int16_t*));
 
-        wav_header_t* wav_header_final;
+        // header e vetor de somatorio final
+        wav_header_t* wav_header_final = malloc(sizeof(wav_header_t));
         int16_t* data_final;
 
+        int total_data = 0;
+        int max_data = 0;
+
+        // leitura de dados de multiplos arquivos
+        for (int i = 0; i < num_arq; i++)
+        {
+            if (arg_data->mult_inputs[i])
+                get_wav_data(&(data[i]), &(wav_headers[i]), arg_data->mult_inputs[i]);
+            else {
+                fprintf(stderr, "Erro de leitura de arquivo\n");
+                exit(ERR_LEITURA_DADOS);
+            }
+            total_data += wav_headers[i]->sub_chunk2_size;
+            if (max_data < wav_headers[i]->sub_chunk2_size)
+                max_data = wav_headers[i]->sub_chunk2_size;
+        }
+        
+        // define os valores padroes de cabeçalho
+        memcpy(wav_header_final, wav_headers[0], sizeof(wav_header_t));
+
+        data_final = malloc(total_data * sizeof(int16_t));
+
         switch (filter_code) {
-            case WAVCAT:
-                concatenate(arg_data, wav_headers, data, num_arq, &wav_header_final, &data_final);
+            case WAVCAT: // contcatena os arquivos
+                concatenate(arg_data, wav_headers, data, num_arq, &wav_header_final, &data_final, total_data);
+                wav_header_final->sub_chunk2_size = total_data;
+                wav_header_final->chunk_size = total_data + DIFF_DATA_SIZE;
                 break;
-            case WAVMIX:
-                mixer(arg_data, wav_headers, data, num_arq, &wav_header_final, &data_final);
+
+            case WAVMIX: // mistura os arquivos
+                if (safe){
+                    arg_data->level = 1.0 / num_arq;
+                    for (int i = 0; i < num_arq; i++){
+                        volume_changer(arg_data, wav_headers[i], data[i]);
+                    }
+                    fprintf(stderr, "Valor de entrada assegurado %f\n", arg_data->level);
+                }
+                mixer(arg_data, wav_headers, data, num_arq, &wav_header_final, &data_final, max_data);
+                wav_header_final->sub_chunk2_size = max_data;
+                wav_header_final->chunk_size = max_data + DIFF_DATA_SIZE;
                 break;
         }
     
-        // armazena o vetor no aqruivo
+        // armazena o header e vetor final no aqruivo
         store_wav_data(wav_header_final, arg_data, data_final);
-        close_files(arg_data, num_arq);
 
-        // libera a memória
-        free(arg_data);
+        // libera a memória de todos os headers e vetores
+        close_files(arg_data, num_arq);
         for (int i = 0; i < num_arq; i++){
             free(wav_headers[i]);
             free(data[i]);
         }
+        if (!arg_data->mult_inputs)
+            free(arg_data->mult_inputs);
     }
+
+    free(arg_data);
     
     return 0;
 }
