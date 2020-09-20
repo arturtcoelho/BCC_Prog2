@@ -20,7 +20,7 @@
 #define WAVCAT 12
 
 // define os padroes de segurança
-#define ECHO_SAFE 1.25
+#define ECHO_SAFE 2.5
 #define WIDE_SAFE 2.5
 
 //////////////////////////////////////////////////////////////////////////////
@@ -84,6 +84,7 @@ int main(int argc, char  **argv)
     int16_t max;
 
     if (single_input(filter_code)){
+
         //////////////////////////////////////////////////////////////////////////
         // filtros que aceitam apenas um input como argumento ou entrada padrão //
         //////////////////////////////////////////////////////////////////////////
@@ -152,7 +153,9 @@ int main(int argc, char  **argv)
         free(wav_header);
         free(data);
 
-    } else {
+    } 
+
+    if (!single_input(filter_code)) {
 
         ////////////////////////////////////////////////////////////////////////////
         // tipos de filtros que aceitam multiplos inputs como argumentos          //
@@ -175,6 +178,11 @@ int main(int argc, char  **argv)
         wav_header_t* wav_header_final = malloc(sizeof(wav_header_t));
         int16_t* data_final;
 
+        if (!wav_headers || !data || !wav_header_final ){
+            fprintf(stderr, "Bad malloc\n");
+            exit(ERR_BAD_MALLOC);
+        }
+
         int total_data = 0;
         int max_data = 0;
 
@@ -196,6 +204,12 @@ int main(int argc, char  **argv)
         memcpy(wav_header_final, wav_headers[0], sizeof(wav_header_t));
 
         data_final = malloc(total_data * sizeof(int16_t));
+
+        if (!data_final){
+            fprintf(stderr, "Bad malloc\n");
+            exit(ERR_BAD_MALLOC);
+        }
+
 
         switch (filter_code) {
             case WAVCAT: // contcatena os arquivos

@@ -22,4 +22,4 @@ clean: all
 
 purge:
 	-rm -f ~. *.o
-	-rm -f ~. $(filters)
+	-rm -f ~. $(filters) main

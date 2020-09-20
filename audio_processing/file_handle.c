@@ -13,6 +13,10 @@ arg_data_t* get_arg_data(int argc, char **argv){
 
     // aloca espaço para as informações de argumento
     arg_data_t *arg_data = malloc(sizeof(arg_data_t));
+    if (!arg_data) {
+        fprintf(stderr, "Bad malloc\n");
+        exit(ERR_BAD_MALLOC);
+    }
     arg_data->input_file = NULL;
     arg_data->output_file = NULL;
     arg_data->mult_inputs = NULL;
@@ -87,6 +91,10 @@ arg_data_t* get_arg_data(int argc, char **argv){
 FILE** get_mult_args(int argc, char **argv, int *num_arq){
     // vetor de ponteiros para os nomes de arquivos
     FILE** files = malloc(MAX_ARGS * sizeof(FILE**));
+        if (!files) {
+        fprintf(stderr, "Bad malloc\n");
+        exit(ERR_BAD_MALLOC);
+    }
 
     if (argc <= 1){
         fprintf(stderr, "insira ao menos um arquivo\n");
@@ -103,6 +111,11 @@ FILE** get_mult_args(int argc, char **argv, int *num_arq){
             i++;
         // copia os arquivos
         files[num] = fopen(argv[i], "r");
+        if (!files[num]) {
+            fprintf(stderr, "Arquivo não encontrado\n");
+            exit(ERR_ARQ_NAO_ENCONTRADO);
+        }
+
         num++;
         i++;
     }
@@ -124,7 +137,11 @@ wav_header_t* read_header(void* input_file){
     }
 
 // le o cabeçalho
-    fread(wav_header, sizeof(wav_header_t), 1, input_file);
+    int read_size = fread(wav_header, sizeof(wav_header_t), 1, input_file);
+    if (read_size != 1){
+        fprintf(stderr, "Erro de leitura de arquivo\n");
+        exit(ERR_LEITURA_DADOS);
+    }
 
     return wav_header;
 }
@@ -142,11 +159,15 @@ int get_wav_data(int16_t **data, wav_header_t **wav_header, void* input_file){
     }
 
 // le o cabeçalho
-    fread(*wav_header, sizeof(wav_header_t), 1, input_file);
+    int header_read_size = fread(*wav_header, sizeof(wav_header_t), 1, input_file);
+    if (header_read_size != 1){
+        fprintf(stderr, "Erro de leitura de arquivo\n");
+        exit(ERR_LEITURA_DADOS);
+    }
+
 
 // aloca o espaço de dados
     *data = malloc((*wav_header)->sub_chunk2_size);
-
     if (*data == NULL){
         fprintf(stderr, "Bad malloc\n");
         exit(ERR_BAD_MALLOC);
